@@ -3,126 +3,88 @@ package main
 import (
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	mapstuff "github.com/jack-barr3tt/gostuff/maps"
-	numstuff "github.com/jack-barr3tt/gostuff/nums"
+	"github.com/jack-barr3tt/gostuff/maze"
 	slicestuff "github.com/jack-barr3tt/gostuff/slices"
-	"github.com/jack-barr3tt/gostuff/types"
 )
-
-func CanUseForLoop(p1, p2 types.Pair[int, int]) bool {
-	x := numstuff.Abs(p1.First - p2.First)
-	y := numstuff.Abs(p1.Second - p2.Second)
-
-	return x == 1 || y == 1
-}
 
 func main() {
 	data, _ := os.ReadFile("input.txt")
 
-	grid := strings.Split(string(data), "\n")
+	grid := maze.NewMaze(string(data))
 
-	// find the guard
-	guardPos := types.Pair[int, int]{First: 0, Second: 0}
-	for y, row := range grid {
-		i := regexp.MustCompile(`\^|<|>|V`).FindStringIndex(row)
-		if i != nil {
-			guardPos = types.Pair[int, int]{First: i[0], Second: y}
-			break
-		}
-	}
-	initialPos := types.Pair[int, int]{First: guardPos.First, Second: guardPos.Second}
+	guardAppearances := []rune{'^', '>', 'V', '<'}
+	guardPos := slicestuff.FlatMap(func(g rune) []maze.Point {
+		return grid.LocateAll(g)
+	}, guardAppearances)[0]
+
+	initialPos := guardPos.Clone()
 
 	visited := make(map[string]bool)
 
-	moves := [][]int{
-		{0, -1},
-		{1, 0},
-		{0, 1},
-		{-1, 0},
+	var dir maze.Direction
+	if grid.At(guardPos) == '^' {
+		dir = maze.North
+	} else if grid.At(guardPos) == '>' {
+		dir = maze.East
+	} else if grid.At(guardPos) == 'V' {
+		dir = maze.South
+	} else if grid.At(guardPos) == '<' {
+		dir = maze.West
 	}
-
-	mp := 0
-	if grid[guardPos.Second][guardPos.First] == '^' {
-		mp = 0
-	} else if grid[guardPos.Second][guardPos.First] == '>' {
-		mp = 1
-	} else if grid[guardPos.Second][guardPos.First] == 'V' {
-		mp = 2
-	} else if grid[guardPos.Second][guardPos.First] == '<' {
-		mp = 3
-	}
-
-	initialMp := mp
+	initDir := dir
 
 	for {
-		key := fmt.Sprintf("%d,%d", guardPos.First, guardPos.Second)
+		key := fmt.Sprintf("%d,%d", guardPos[0], guardPos[1])
 		visited[key] = true
 
-		move := moves[mp]
-
-		if guardPos.First+move[0] >= len(grid[0]) || guardPos.First+move[0] < 0 || guardPos.Second+move[1] >= len(grid) || guardPos.Second+move[1] < 0 {
+		newPos, ok := grid.Move(guardPos, dir)
+		if !ok {
 			break
 		}
 
-		for grid[guardPos.Second+move[1]][guardPos.First+move[0]] == '#' {
-			mp = (mp + 1) % 4
-			move = moves[mp]
+		for ; grid.At(newPos) == '#'; newPos, ok = grid.Move(guardPos, dir) {
+			dir = dir.RotateDirection(maze.C90)
 		}
 
-		guardPos.First += move[0]
-		guardPos.Second += move[1]
+		guardPos = newPos
 	}
 
 	println("part 1:", len(mapstuff.Keys(visited)))
 
-	pos := [][]int{}
-
+	pos := []maze.Point{}
 	for y := range grid {
 		for x := range grid[y] {
-			if grid[y][x] == '#' {
-				continue
-			}
-			if x == initialPos.First && y == initialPos.Second {
+			if grid.At(maze.Point{x, y}) == '#' || x == initialPos[0] && y == initialPos[1] {
 				continue
 			}
 
-			pos = append(pos, []int{y, x})
+			pos = append(pos, maze.Point{x, y})
 		}
 	}
 
-	vals := slicestuff.ParallelMap(func(p []int) bool {
-		x := p[1]
-		y := p[0]
-
-		mgrid := make([]string, len(grid))
-		copy(mgrid, grid)
-
-		mgrid[y] = mgrid[y][:x] + "#" + mgrid[y][x+1:]
-		mp := initialMp
-		guardPos := types.Pair[int, int]{First: initialPos.First, Second: initialPos.Second}
-
+	vals := slicestuff.ParallelMap(func(p maze.Point) bool {
+		mgrid := grid.Clone()
+		mgrid.Set(p, '#')
+		dir := initDir
+		guardPos := initialPos.Clone()
 		moveHistory := []string{}
 
 		for {
-			key := fmt.Sprintf("%d,%d", guardPos.First, guardPos.Second)
+			key := fmt.Sprintf("%d,%d", guardPos[0], guardPos[1])
 			moveHistory = append(moveHistory, key)
 
-			move := moves[mp]
-
-			if guardPos.First+move[0] >= len(mgrid[0]) || guardPos.First+move[0] < 0 || guardPos.Second+move[1] >= len(mgrid) || guardPos.Second+move[1] < 0 {
+			newPos, ok := mgrid.Move(guardPos, dir)
+			if !ok {
 				break
 			}
 
-			for mgrid[guardPos.Second+move[1]][guardPos.First+move[0]] == '#' {
-				mp = (mp + 1) % 4
-				move = moves[mp]
+			for ; mgrid.At(newPos) == '#'; newPos, ok = mgrid.Move(guardPos, dir) {
+				dir = dir.RotateDirection(maze.C90)
 			}
 
-			guardPos.First += move[0]
-			guardPos.Second += move[1]
+			guardPos = newPos
 
 			if slicestuff.HasRepeatingSuffix(moveHistory, 4) {
 				return true
