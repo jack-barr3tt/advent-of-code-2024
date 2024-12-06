@@ -78,52 +78,59 @@ func main() {
 
 	println("part 1:", len(mapstuff.Keys(visited)))
 
-	loops := 0
+	pos := [][]int{}
 
 	for y := range grid {
 		for x := range grid[y] {
 			if grid[y][x] == '#' {
 				continue
 			}
-			if y == initialPos.First && x == initialPos.Second {
+			if x == initialPos.First && y == initialPos.Second {
 				continue
 			}
 
-			grid[y] = grid[y][:x] + "#" + grid[y][x+1:]
-			mp = initialMp
-			guardPos = types.Pair[int, int]{First: initialPos.First, Second: initialPos.Second}
-
-			moveHistory := []string{}
-
-			for {
-				key := fmt.Sprintf("%d,%d", guardPos.First, guardPos.Second)
-				moveHistory = append(moveHistory, key)
-
-				move := moves[mp]
-
-				if guardPos.First+move[0] >= len(grid[0]) || guardPos.First+move[0] < 0 || guardPos.Second+move[1] >= len(grid) || guardPos.Second+move[1] < 0 {
-					break
-				}
-
-				for grid[guardPos.Second+move[1]][guardPos.First+move[0]] == '#' {
-					mp = (mp + 1) % 4
-					move = moves[mp]
-				}
-
-				guardPos.First += move[0]
-				guardPos.Second += move[1]
-
-				if slicestuff.HasRepeatingSuffix(moveHistory, 4) {
-					loops++
-					break
-				}
-			}
-
-			grid[y] = grid[y][:x] + "." + grid[y][x+1:]
-
-			println(y*len(grid[0])+x, "/", len(grid)*len(grid[0]), loops)
+			pos = append(pos, []int{y, x})
 		}
 	}
 
-	println("part 2:", loops)
+	vals := slicestuff.ParallelMap(func(p []int) bool {
+		x := p[1]
+		y := p[0]
+
+		mgrid := make([]string, len(grid))
+		copy(mgrid, grid)
+
+		mgrid[y] = mgrid[y][:x] + "#" + mgrid[y][x+1:]
+		mp := initialMp
+		guardPos := types.Pair[int, int]{First: initialPos.First, Second: initialPos.Second}
+
+		moveHistory := []string{}
+
+		for {
+			key := fmt.Sprintf("%d,%d", guardPos.First, guardPos.Second)
+			moveHistory = append(moveHistory, key)
+
+			move := moves[mp]
+
+			if guardPos.First+move[0] >= len(mgrid[0]) || guardPos.First+move[0] < 0 || guardPos.Second+move[1] >= len(mgrid) || guardPos.Second+move[1] < 0 {
+				break
+			}
+
+			for mgrid[guardPos.Second+move[1]][guardPos.First+move[0]] == '#' {
+				mp = (mp + 1) % 4
+				move = moves[mp]
+			}
+
+			guardPos.First += move[0]
+			guardPos.Second += move[1]
+
+			if slicestuff.HasRepeatingSuffix(moveHistory, 4) {
+				return true
+			}
+		}
+
+		return false
+	}, pos, 10)
+
+	println("part 2:", len(slicestuff.Filter(func(v bool) bool { return v }, vals)))
 }
