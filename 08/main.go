@@ -7,6 +7,7 @@ import (
 
 	"github.com/jack-barr3tt/gostuff/maze"
 	slicestuff "github.com/jack-barr3tt/gostuff/slices"
+	"github.com/jack-barr3tt/gostuff/types"
 )
 
 func getAntennas(data string) []rune {
@@ -24,7 +25,7 @@ func getAntennas(data string) []rune {
 	return antennas
 }
 
-func getAntinodes(grid maze.Maze, source maze.Point, dir maze.Direction) ([]string, []string) {
+func getAntinodes(grid maze.Maze, source types.Point, dir types.Direction) ([]string, []string) {
 	antinodes := []string{}
 	antinodes2 := []string{}
 
@@ -59,7 +60,7 @@ func main() {
 		pairs := slicestuff.NCombosUnique(locations, 2)
 
 		for _, pair := range pairs {
-			dir := maze.DirectionBetween(pair[0], pair[1])
+			dir := pair[0].DirectionTo(pair[1])
 
 			a1, a2 := getAntinodes(grid, pair[1], dir)
 			antinodes = append(antinodes, a1...)

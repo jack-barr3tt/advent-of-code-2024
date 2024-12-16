@@ -1,47 +1,32 @@
 package main
 
 import (
+	"math"
 	"os"
-	"regexp"
+	"strings"
 
-	"github.com/jack-barr3tt/gostuff/parsing"
+	"github.com/jack-barr3tt/gostuff/lines"
 	stringstuff "github.com/jack-barr3tt/gostuff/strings"
 )
 
-func toFloat(a []int) []float64 {
-	return []float64{float64(a[0]), float64(a[1])}
-}
-
 func findPresses(ai, bi, pi []int) (int, int) {
-	a, b, p := toFloat(ai), toFloat(bi), toFloat(pi)
-	ca := ((p[0] * b[1]) - (p[1] * b[0])) / ((a[0] * b[1]) - (a[1] * b[0]))
-	cb := (p[0] - a[0]*ca) / b[0]
-	if ca != float64(int64(ca)) || cb != float64(int64(cb)) {
-		return 0, 0
+	x, y, ok := lines.NewAXBYC(ai[0], bi[0], pi[0]).IntersectsAt(lines.NewAXBYC(ai[1], bi[1], pi[1]))
+	if ok && math.Round(x) == x && math.Round(y) == y {
+		return int(math.Round(x)), int(math.Round(y))
 	}
-	return int(ca), int(cb)
+	return 0, 0
 }
 
 func main() {
 	data, _ := os.ReadFile("input.txt")
 
-	buttonRegex := regexp.MustCompile(`Button (A|B): X\+([0-9]+), Y\+([0-9]+)`)
-	prizeRegex := regexp.MustCompile(`Prize: X=([0-9]+), Y=([0-9]+)`)
-
-	rest, stmt := string(data), ""
+	chunks := strings.Split(string(data), "\n\n")
 
 	part1, part2 := 0, 0
 
-	for {
-		rest, stmt = parsing.NextToken(rest, []regexp.Regexp{*buttonRegex})
-		if stmt == "" {
-			break
-		}
-		a := stringstuff.GetNums(stmt)
-		rest, stmt = parsing.NextToken(rest, []regexp.Regexp{*buttonRegex})
-		b := stringstuff.GetNums(stmt)
-		rest, stmt = parsing.NextToken(rest, []regexp.Regexp{*prizeRegex})
-		prize := stringstuff.GetNums(stmt)
+	for _, chunk := range chunks {
+		nums := stringstuff.GetNums(chunk)
+		a, b, prize := []int{nums[0], nums[1]}, []int{nums[2], nums[3]}, []int{nums[4], nums[5]}
 
 		a1, b1 := findPresses(a, b, prize)
 		part1 += a1*3 + b1

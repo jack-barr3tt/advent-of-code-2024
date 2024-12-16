@@ -5,18 +5,19 @@ import (
 	"strings"
 
 	"github.com/jack-barr3tt/gostuff/maze"
+	"github.com/jack-barr3tt/gostuff/types"
 )
 
-func pushVertical(grid *maze.Maze, robotPos *maze.Point, pos maze.Point, move maze.Direction) bool {
+func pushVertical(grid *maze.Maze, robotPos *types.Point, pos types.Point, move types.Direction) bool {
 	if grid.At(pos) == '.' {
 		return true
 	}
 	aPos := pos
 	bPos := pos
 	if grid.At(aPos) == '[' {
-		bPos = aPos.UnsafeMove(maze.East)
+		bPos = aPos.UnsafeMove(types.East)
 	} else {
-		aPos = aPos.UnsafeMove(maze.West)
+		aPos = aPos.UnsafeMove(types.West)
 	}
 
 	newA, _ := grid.Move(aPos, move)
@@ -25,7 +26,7 @@ func pushVertical(grid *maze.Maze, robotPos *maze.Point, pos maze.Point, move ma
 		return false
 	}
 
-	dummyPoint := maze.Point{0, 0}
+	dummyPoint := types.Point{0, 0}
 	dummyGrid := grid.Clone()
 
 	if pushVertical(&dummyGrid, &dummyPoint, newA, move) && pushVertical(&dummyGrid, &dummyPoint, newB, move) {
@@ -50,16 +51,16 @@ func main() {
 
 	grid := maze.NewMaze(string(parts[0]))
 
-	moves := []maze.Direction{}
+	moves := []types.Direction{}
 	for _, m := range parts[1] {
 		if m == '^' {
-			moves = append(moves, maze.North)
+			moves = append(moves, types.North)
 		} else if m == 'v' {
-			moves = append(moves, maze.South)
+			moves = append(moves, types.South)
 		} else if m == '>' {
-			moves = append(moves, maze.East)
+			moves = append(moves, types.East)
 		} else if m == '<' {
-			moves = append(moves, maze.West)
+			moves = append(moves, types.West)
 		}
 	}
 
@@ -111,7 +112,7 @@ func main() {
 		if grid.At(newPos) == '.' {
 			robotPos = newPos
 		} else if grid.At(newPos) == '[' || grid.At(newPos) == ']' {
-			if move == maze.East || move == maze.West {
+			if move == types.East || move == types.West {
 				for i := 1; ; i++ {
 					searchPos, _ := grid.Move(newPos, move.Multiply(i))
 					if grid.At(searchPos) == '.' {
@@ -133,7 +134,7 @@ func main() {
 		}
 		grid.Set(robotPos, '@')
 	}
-  
+
 	boxes = grid.LocateAll('[')
 
 	part2 := 0

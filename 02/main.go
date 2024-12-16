@@ -8,12 +8,6 @@ import (
 	stringstuff "github.com/jack-barr3tt/gostuff/strings"
 )
 
-func remove(slice []int, x int) []int {
-	result := make([]int, 0, len(slice)-1)
-	result = append(result, slice[:x]...)
-	return append(result, slice[x+1:]...)
-}
-
 func reportSafe(report []int) bool {
 	diffs := []int{}
 	for i := 1; i < len(report); i++ {
@@ -48,7 +42,7 @@ func main() {
 			part2++
 		} else {
 			for i := 0; i < len(report); i++ {
-				if reportSafe(remove(report, i)) {
+				if reportSafe(slicestuff.RemoveAt(report, i)) {
 					part2++
 					break
 				}

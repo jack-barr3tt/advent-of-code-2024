@@ -8,31 +8,28 @@ import (
 	"github.com/jack-barr3tt/gostuff/maze"
 	slicestuff "github.com/jack-barr3tt/gostuff/slices"
 	stringstuff "github.com/jack-barr3tt/gostuff/strings"
+	"github.com/jack-barr3tt/gostuff/types"
 )
 
-func pointKey(point maze.Point) string {
+func pointKey(point types.Point) string {
 	return fmt.Sprintf("%d,%d", point[0], point[1])
 }
 
-func dfs(grid maze.Maze, start maze.Point, visited map[string]bool) []maze.Point {
+func dfs(grid maze.Maze, start types.Point, visited map[string]bool) []types.Point {
 	if _, ok := visited[pointKey(start)]; ok {
-		return []maze.Point{}
+		return []types.Point{}
 	}
 	visited[pointKey(start)] = true
 
 	if grid.At(start) == '9' {
-		return []maze.Point{start}
+		return []types.Point{start}
 	}
 
-	dir := maze.North
-	result := []maze.Point{}
+	dir := types.North
+	result := []types.Point{}
 
 	for i := 0; i < 4; i++ {
-		if i > 0 {
-			dir = dir.RotateDirection(maze.C90)
-		}
-
-		newPos, ok := grid.Move(start, dir)
+		newPos, ok := grid.Move(start, dir.Rotate(90*i))
 
 		if ok && stringstuff.GetNum(string(grid.At(newPos))) == stringstuff.GetNum(string(grid.At(start)))+1 {
 			// have to copy the visited map because apparently golang maps are reference types
@@ -54,7 +51,7 @@ func main() {
 
 	heads := grid.LocateAll('0')
 
-	scores := slicestuff.Map(func(head maze.Point) [2]int {
+	scores := slicestuff.Map(func(head types.Point) [2]int {
 		heads := dfs(grid, head, make(map[string]bool))
 		seen := make(map[string]bool)
 

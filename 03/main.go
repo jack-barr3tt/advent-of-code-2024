@@ -4,6 +4,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/jack-barr3tt/gostuff/parsing"
 	stringstuff "github.com/jack-barr3tt/gostuff/strings"
 )
 
@@ -17,37 +18,14 @@ func execMul(stmt string) int {
 	return nums[0] * nums[1]
 }
 
-func nextToken(s string) (string, string) {
-	loc := []int{-1}
-	res := ""
-
-	for _, expr := range exprs {
-		if match := expr.FindString(s); match != "" {
-			if loc[0] == -1 || expr.FindStringIndex(s)[0] < loc[0] {
-				loc = expr.FindStringIndex(s)
-				res = match
-			}
-		}
-	}
-
-	if loc[0] == -1 {
-		return s, res
-	}
-
-	return s[loc[1]:], res
-}
-
 func main() {
 	data, _ := os.ReadFile("input.txt")
-
-	source := string(data)
 
 	part1 := 0
 	part2 := 0
 	enabled := true
-	stmt := ""
 
-	for source, stmt = nextToken(source); stmt != ""; source, stmt = nextToken(source) {
+	for source, stmt := parsing.NextToken(string(data), exprs); stmt != ""; source, stmt = parsing.NextToken(source, exprs) {
 		if mul.MatchString(stmt) {
 			res := execMul(stmt)
 

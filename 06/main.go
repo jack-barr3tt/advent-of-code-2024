@@ -7,6 +7,7 @@ import (
 	mapstuff "github.com/jack-barr3tt/gostuff/maps"
 	"github.com/jack-barr3tt/gostuff/maze"
 	slicestuff "github.com/jack-barr3tt/gostuff/slices"
+	"github.com/jack-barr3tt/gostuff/types"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 	grid := maze.NewMaze(string(data))
 
 	guardAppearances := []rune{'^', '>', 'V', '<'}
-	guardPos := slicestuff.FlatMap(func(g rune) []maze.Point {
+	guardPos := slicestuff.FlatMap(func(g rune) []types.Point {
 		return grid.LocateAll(g)
 	}, guardAppearances)[0]
 
@@ -23,15 +24,15 @@ func main() {
 
 	visited := make(map[string]bool)
 
-	var dir maze.Direction
+	var dir types.Direction
 	if grid.At(guardPos) == '^' {
-		dir = maze.North
+		dir = types.North
 	} else if grid.At(guardPos) == '>' {
-		dir = maze.East
+		dir = types.East
 	} else if grid.At(guardPos) == 'V' {
-		dir = maze.South
+		dir = types.South
 	} else if grid.At(guardPos) == '<' {
-		dir = maze.West
+		dir = types.West
 	}
 	initDir := dir
 
@@ -45,7 +46,7 @@ func main() {
 		}
 
 		for ; grid.At(newPos) == '#'; newPos, ok = grid.Move(guardPos, dir) {
-			dir = dir.RotateDirection(maze.C90)
+			dir = dir.Rotate(90)
 		}
 
 		guardPos = newPos
@@ -53,18 +54,18 @@ func main() {
 
 	println("part 1:", len(mapstuff.Keys(visited)))
 
-	pos := []maze.Point{}
+	pos := []types.Point{}
 	for y := range grid {
 		for x := range grid[y] {
-			if grid.At(maze.Point{x, y}) == '#' || x == initialPos[0] && y == initialPos[1] {
+			if grid.At(types.Point{x, y}) == '#' || x == initialPos[0] && y == initialPos[1] {
 				continue
 			}
 
-			pos = append(pos, maze.Point{x, y})
+			pos = append(pos, types.Point{x, y})
 		}
 	}
 
-	vals := slicestuff.ParallelMap(func(p maze.Point) bool {
+	vals := slicestuff.ParallelMap(func(p types.Point) bool {
 		mgrid := grid.Clone()
 		mgrid.Set(p, '#')
 		dir := initDir
@@ -81,7 +82,7 @@ func main() {
 			}
 
 			for ; mgrid.At(newPos) == '#'; newPos, ok = mgrid.Move(guardPos, dir) {
-				dir = dir.RotateDirection(maze.C90)
+				dir = dir.Rotate(90)
 			}
 
 			guardPos = newPos
