@@ -11,12 +11,22 @@ END
 
 8 ^ 15 <= A < 8 ^ 16
 
-1 2
-2 1
-3 0
-4 7
-5 6
-6 5
-7 4
-
-A % 8 must be 2
+== MY APPROACH ==
+1.  First I translated my problem input from numbers into a human readable pseudocode.
+2.  I substituted register values into each other repeatedly until I had a general formula for the output in terms of A, 
+    and a general formula for the next value of A.
+3.  Inspecting the code, I saw that it loops repeatedly until A / 8 < 1 (i.e A % 8 != 0).
+    Given that my program has length 16, A cannot be greater than 8 ^ 16 or the output would be too long.
+    It also must be greater than or equal to 8 ^ 15 or it would be too short.
+4.  Next I translated my formula for the output into Go code (called calculateResult). I wrote a brute force loop
+    starting from 8 ^ 15 and stopping at 8 ^ 16. I used the calculateResult function to skip values that would have the wrong
+    first value. I then wrote a function called valid which checked if the first n values of the output would be correct.
+    If I asked this function to skip the first 16 values, thats just back to brute forcing and would take too long.
+    Instead, I chose a smaller number (I think I chose 3) and inspected the output.
+5.  I noticed that the first output with the correct 3 values appeared after 1546749 iterations, so I adapted my for loop
+    to start from 8^15 + 1546749 and stop at 8^16.
+6.  I also noticed that outputs with the correct first 3 values occurred every 4194304 iterations, so I adapted my for loop
+    to increment by 4194304 each time instead of by 1.
+7.  This meant the number of brute force iterations required was (8^16-(8^15+154749))/419304 = 587379573.
+8.  600 million is easily brute force-able given the simplicity of each iteration, 
+    so I just ran the brute force loop and got the answer.
